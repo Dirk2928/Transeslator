@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 250 250 249;        /* stone-50  */
+  --surface: 255 255 255;   /* white     */
+  --border: 231 229 228;    /* stone-200 */
+  --fg: 28 25 23;           /* stone-900 */
+  --muted: 120 113 108;     /* stone-500 */
+  --accent: 37 99 235;      /* blue-600  */
+}
+
+.dark {
+  --bg: 12 10 9;            /* stone-950 */
+  --surface: 28 25 23;      /* stone-900 */
+  --border: 68 64 60;       /* stone-700 */
+  --fg: 250 250 249;        /* stone-50  */
+  --muted: 168 162 158;     /* stone-400 */
+  --accent: 96 165 250;     /* blue-400  */
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Visible focus for keyboard users. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}
