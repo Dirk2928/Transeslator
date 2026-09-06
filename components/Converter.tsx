@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { Dropzone } from "./Dropzone";
 import { FileList } from "./FileList";
 import { useConverter } from "@/lib/store";
-import { downloadBlob } from "@/lib/format";
+import { downloadBlob, formatTextForDownload } from "@/lib/format";
 import type { ConvertResponse } from "@/lib/types";
 
 export function Converter() {
@@ -71,7 +71,7 @@ export function Converter() {
         name = `${name.slice(0, dot)}-${count}${name.slice(dot)}`;
       }
       used.set(f.result!.outputName, count + 1);
-      zip.file(name, f.result!.text);
+      zip.file(name, formatTextForDownload(f.result!.text));
     }
 
     const blob = await zip.generateAsync({ type: "blob" });

@@ -3,7 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { useConverter, type QueuedFile } from "@/lib/store";
-import { formatBytes, downloadBlob } from "@/lib/format";
+import { formatBytes, formatTextForDownload, downloadBlob } from "@/lib/format";
+import type { ConversionResult } from "@/lib/types";
 
 export function FileList() {
   const files = useConverter((s) => s.files);
@@ -71,12 +72,16 @@ function Row({
             <button
               type="button"
               onClick={() =>
-                downloadBlob(new Blob([r.text], { type: "text/plain;charset=utf-8" }), r.outputName)
+                downloadBlob(
+                  new Blob([formatTextForDownload(r.text)], { type: "text/plain;charset=utf-8" }),
+                  r.outputName
+                )
               }
               className="rounded-md border border-border px-2.5 py-1 text-xs text-fg hover:bg-border/40"
             >
               Download
             </button>
+            <AiPrompt file={file} result={r} />
           </>
         )}
 
@@ -111,6 +116,86 @@ function Row({
         </pre>
       )}
     </div>
+  );
+}
+
+function AiPrompt({ file, result }: { file: QueuedFile; result: ConversionResult }) {
+  const updateResult = useConverter((s) => s.updateResult);
+  const [open, setOpen] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function runPrompt() {
+    if (!prompt.trim() || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: result.text, prompt }),
+      });
+      const data = (await response.json()) as { text?: unknown; error?: unknown };
+      if (!response.ok || typeof data.text !== "string") {
+        throw new Error(typeof data.error === "string" ? data.error : "AI prompt failed.");
+      }
+      updateResult(file.id, {
+        ...result,
+        text: data.text,
+        chars: data.text.length,
+        enhanced: true,
+      });
+      setPrompt("");
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI prompt failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => {
+            setOpen((value) => !value);
+            setError(null);
+          }}
+          className="rounded-md border border-accent/50 px-2.5 py-1 text-xs text-accent hover:bg-accent/10"
+          aria-expanded={open}
+        >
+          AI
+        </button>
+        {open && (
+          <div className="absolute right-0 top-full z-10 mt-2 w-80 rounded-md border border-accent/30 bg-bg p-3 shadow-lg">
+          <label htmlFor={`prompt-${file.id}`} className="mb-2 block text-xs font-medium text-fg">
+            Tell AI how to change this text
+          </label>
+          <textarea
+            id={`prompt-${file.id}`}
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder="e.g. Translate this text to Spanish"
+            rows={3}
+            className="w-full resize-y rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg"
+            disabled={busy}
+          />
+          {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
+          <button
+            type="button"
+            onClick={runPrompt}
+            disabled={busy || !prompt.trim()}
+            className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+          >
+            {busy ? "Running…" : "Run AI"}
+          </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

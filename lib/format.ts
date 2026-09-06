@@ -8,6 +8,12 @@ export function formatBytes(bytes: number): string {
   return `${mb.toFixed(1)} MB`;
 }
 
+/** Keep downloaded text files UTF-8, LF-delimited, and terminated by one newline. */
+export function formatTextForDownload(text: string): string {
+  const normalized = text.replace(/\r\n?/g, "\n").trimEnd();
+  return normalized.length > 0 ? `${normalized}\n` : "";
+}
+
 /** Trigger a browser download for a blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

@@ -1,8 +1,8 @@
 {
-  "name": "smart-file-converter",
+  "name": "transeslator",
   "version": "1.0.0",
   "private": true,
-  "description": "Convert PDF, DOCX, PPTX, and images to clean TXT with pluggable AI text enhancement.",
+  "description": "Convert documents and images to clean TXT with AI-powered text transformation.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
