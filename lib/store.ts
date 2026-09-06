@@ -66,7 +66,9 @@ export const useConverter = create<ConverterState>((set) => ({
 
   updateResult: (id, result) =>
     set((state) => ({
-      files: state.files.map((f) => (f.id === id ? { ...f, result } : f)),
+      files: state.files.map((f) =>
+        f.id === id ? { ...f, status: "done", result, error: undefined } : f
+      ),
     })),
 
   applyError: (filename, error) =>
