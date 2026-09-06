@@ -88,7 +88,7 @@ lib/
   types.ts               shared types + validation constants
 ```
 
-Files are processed sequentially per request to keep memory bounded on a single serverless instance. For very high volume you'd move extraction to a dedicated worker/queue — intentionally out of scope for this single-app build.
+Files are uploaded in sequential 4 MB chunks and processed one at a time to avoid request-body limits and reduce peak upload memory. The completed file is still loaded by the format extractor, so the Render service must have enough memory for the selected extractor. For multiple Render instances, use shared object storage for uploads.
 
 ## Deployment
 

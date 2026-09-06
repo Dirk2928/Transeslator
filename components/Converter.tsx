@@ -9,6 +9,33 @@ import { downloadBlob, formatTextForDownload } from "@/lib/format";
 import type { ConvertResponse } from "@/lib/types";
 import { compressFiles } from "@/lib/client/compress";
 
+const UPLOAD_CHUNK_BYTES = 4 * 1024 * 1024;
+
+async function uploadAndConvert(file: File): Promise<ConvertResponse> {
+  const uploadId = crypto.randomUUID();
+  const totalChunks = Math.max(1, Math.ceil(file.size / UPLOAD_CHUNK_BYTES));
+  const fileName = btoa(String.fromCharCode(...new TextEncoder().encode(file.name)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+  for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+    const start = chunkIndex * UPLOAD_CHUNK_BYTES;
+    const response = await fetch("/api/convert", {
+      method: "POST",
+      headers: {
+        "x-upload-id": uploadId,
+        "x-file-name": fileName,
+        "x-chunk-index": String(chunkIndex),
+        "x-total-chunks": String(totalChunks),
+      },
+      body: file.slice(start, Math.min(start + UPLOAD_CHUNK_BYTES, file.size)),
+    });
+    if (!response.ok) throw new Error(`Upload failed (${response.status}).`);
+    if (chunkIndex === totalChunks - 1) return (await response.json()) as ConvertResponse;
+  }
+
+  throw new Error("Upload did not complete.");
+}
+
 export function Converter() {
   const files = useConverter((s) => s.files);
   const addFiles = useConverter((s) => s.addFiles);
@@ -32,19 +59,18 @@ export function Converter() {
 
     try {
       const uploadFiles = await compressFiles(files.map((f) => f.file));
-      const form = new FormData();
-      for (const file of uploadFiles) form.append("files", file, file.name);
-
-      const res = await fetch("/api/convert", { method: "POST", body: form });
-      if (!res.ok && res.status !== 200) {
-        throw new Error(`Server responded ${res.status}`);
+      let converted = 0;
+      for (const file of uploadFiles) {
+        try {
+          const data = await uploadAndConvert(file);
+          for (const result of data.results) applyResult(result.filename, result);
+          for (const err of data.errors) applyError(err.filename, err.error);
+          converted += data.results.length;
+        } catch (err) {
+          applyError(file.name, err instanceof Error ? err.message : "Conversion request failed.");
+        }
       }
-      const data = (await res.json()) as ConvertResponse;
-
-      for (const result of data.results) applyResult(result.filename, result);
-      for (const err of data.errors) applyError(err.filename, err.error);
-
-      if (data.results.length === 0 && data.errors.length > 0) {
+      if (converted === 0) {
         setBanner("No files could be converted. See details below.");
       }
     } catch (err) {
