@@ -23,6 +23,7 @@ interface ConverterState {
   setProcessing: (v: boolean) => void;
   markAll: (status: FileStatus) => void;
   applyResult: (filename: string, result: ConversionResult) => void;
+  updateResult: (id: string, result: ConversionResult) => void;
   applyError: (filename: string, error: string) => void;
 }
 
@@ -61,6 +62,11 @@ export const useConverter = create<ConverterState>((set) => ({
       files: state.files.map((f) =>
         f.file.name === filename ? { ...f, status: "done", result, error: undefined } : f
       ),
+    })),
+
+  updateResult: (id, result) =>
+    set((state) => ({
+      files: state.files.map((f) => (f.id === id ? { ...f, result } : f)),
     })),
 
   applyError: (filename, error) =>

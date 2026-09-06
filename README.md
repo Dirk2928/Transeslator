@@ -1,4 +1,4 @@
-# Smart File Converter
+# Transeslator
 
 Convert **PDF, DOCX, PPTX, and images (JPG/PNG/WebP)** to clean plain text, with an optional, pluggable AI enhancement step that removes redundant content and improves structure.
 
@@ -12,7 +12,7 @@ Single Next.js 14 app — no external database, queue, or object storage require
   - **DOCX** — `mammoth` (raw text).
   - **PPTX** — `jszip` + slide XML parsing, one section per slide.
   - **Images** — OCR via `tesseract.js` (English), with a low-confidence warning.
-- Pluggable AI enhancement: point `AI_ENHANCE_URL` at your endpoint, or fall back to a deterministic local cleanup (dedupe + whitespace normalization).
+- Per-file AI prompt chatbox for transforming extracted text before download.
 - Per-file status, text preview, individual download, and **Download all as ZIP**.
 - Dark / light / system theme toggle. Responsive, keyboard-accessible, respects `prefers-reduced-motion`.
 
@@ -27,7 +27,7 @@ Open http://localhost:3000.
 
 > First OCR run downloads the Tesseract English model and WASM (~a few MB). Subsequent runs reuse the cached worker within the server process.
 
-## AI enhancement endpoint (optional)
+## AI prompt endpoint
 
 Copy `.env.example` to `.env.local` and set:
 
@@ -48,7 +48,7 @@ and must return:
 { "text": "cleaned text" }
 ```
 
-On any error, timeout (60s), or missing config, the app falls back to the local heuristic so a conversion never fails solely because the AI step did.
+The AI button reports endpoint errors without changing the extracted text. Normal conversion still uses the local cleanup pass when no endpoint is configured.
 
 ## Format support notes
 

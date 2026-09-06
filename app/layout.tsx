@@ -6,9 +6,9 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Smart File Converter",
+  title: "Transeslator",
   description:
-    "Convert PDF, DOCX, PPTX, and images to clean TXT with optional AI text enhancement.",
+    "Convert documents and images to clean TXT with AI-powered text transformation.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
