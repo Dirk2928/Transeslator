@@ -36,8 +36,6 @@ export interface ConvertResponse {
   errors: ConversionError[];
 }
 
-export const MAX_FILE_BYTES = 100 * 1024 * 1024; // 100 MB hard cap per file.
-
 export const ACCEPTED_MIME: Record<string, string[]> = {
   "application/pdf": [".pdf"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],

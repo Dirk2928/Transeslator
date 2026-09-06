@@ -6,7 +6,7 @@ Single Next.js 14 app — no external database, queue, or object storage require
 
 ## Features
 
-- Drag-and-drop multi-file upload (React Dropzone) with size validation (100 MB/file).
+- Drag-and-drop multi-file upload (React Dropzone), including large files.
 - Server-side extraction:
   - **PDF** — `pdfjs-dist` (line-reconstructed text).
   - **DOCX** — `mammoth` (raw text).
@@ -92,7 +92,7 @@ Files are processed sequentially per request to keep memory bounded on a single 
 
 ## Deployment
 
-Deploys to Vercel as a standard Next.js app. Set `AI_ENHANCE_URL` / `AI_ENHANCE_KEY` in the project's environment variables if you want the AI step. Note that serverless function execution limits apply to very large files/OCR jobs.
+Deploys to Render or Vercel as a standard Next.js app. Set `AI_ENHANCE_URL` / `AI_ENHANCE_KEY` in the project's environment variables if you want the AI step. Images are reduced in the browser before upload when possible; office documents and PDFs are uploaded losslessly. The hosting provider's request, memory, disk, and execution limits still apply to exceptionally large files.
 
 ## License
 
