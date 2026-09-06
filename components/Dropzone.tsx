@@ -38,7 +38,7 @@ export function Dropzone({
             {isDragActive ? "Drop files to add them" : "Drag & drop files here"}
           </p>
           <p className="mt-1 text-sm text-muted">
-            PDF, DOCX, PPTX, JPG, PNG, WebP — up to 100 MB each
+            PDF, DOCX, PPTX, JPG, PNG, WebP — large files supported
           </p>
         </div>
         <button

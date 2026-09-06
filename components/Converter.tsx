@@ -7,6 +7,7 @@ import { FileList } from "./FileList";
 import { useConverter } from "@/lib/store";
 import { downloadBlob, formatTextForDownload } from "@/lib/format";
 import type { ConvertResponse } from "@/lib/types";
+import { compressFiles } from "@/lib/client/compress";
 
 export function Converter() {
   const files = useConverter((s) => s.files);
@@ -30,8 +31,9 @@ export function Converter() {
     markAll("processing");
 
     try {
+      const uploadFiles = await compressFiles(files.map((f) => f.file));
       const form = new FormData();
-      for (const f of files) form.append("files", f.file, f.file.name);
+      for (const file of uploadFiles) form.append("files", file, file.name);
 
       const res = await fetch("/api/convert", { method: "POST", body: form });
       if (!res.ok && res.status !== 200) {

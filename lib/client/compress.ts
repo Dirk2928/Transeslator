@@ -5,8 +5,8 @@ import imageCompression from 'browser-image-compression';
 import { PDFDocument } from 'pdf-lib';
 
 /**
- * Compress files client-side BEFORE upload to stay under Vercel's 4.5MB limit.
- * Only processes images and PDFs; other formats pass through unchanged.
+ * Reduce image payloads before upload when possible. Other formats pass through
+ * unchanged because their contents must remain lossless for extraction.
  */
 export async function compressFile(file: File): Promise<File> {
   // Skip non-compressible formats
@@ -15,7 +15,7 @@ export async function compressFile(file: File): Promise<File> {
   }
 
   try {
-    // IMAGES: Compress to <4MB while preserving OCR quality
+    // Images: reduce very large payloads while preserving OCR quality.
     if (file.type.startsWith('image/')) {
       return await imageCompression(file, {
         maxSizeMB: 4,
@@ -53,9 +53,11 @@ export async function compressFile(file: File): Promise<File> {
   return file; // Fallback to original on error
 }
 
-/**
- * Compress multiple files in parallel (safe for browser)
- */
+/** Compress files one at a time so several large files are not held in memory together. */
 export async function compressFiles(files: File[]): Promise<File[]> {
-  return Promise.all(files.map(compressFile));
+  const compressed: File[] = [];
+  for (const file of files) {
+    compressed.push(await compressFile(file));
+  }
+  return compressed;
 }

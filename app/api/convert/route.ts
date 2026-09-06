@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { convertFile } from "@/lib/convert";
 import {
-  MAX_FILE_BYTES,
   isSupported,
   extensionOf,
   type ConvertResponse,
@@ -61,14 +60,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<ConvertRespon
 
       if (!isSupported(file.name)) {
         errors.push({ filename: file.name, error: `Unsupported file type: .${ext || "unknown"}.` });
-        continue;
-      }
-
-      if (file.size > MAX_FILE_BYTES) {
-        errors.push({
-          filename: file.name,
-          error: `File is ${(file.size / 1024 / 1024).toFixed(1)} MB, over the ${MAX_FILE_BYTES / 1024 / 1024} MB limit.`,
-        });
         continue;
       }
 
