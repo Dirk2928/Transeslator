@@ -12,6 +12,8 @@ function outputNameFor(filename: string): string {
 
 async function extractPdf(file: File): Promise<string> {
   const pdfjs = await import("pdfjs-dist/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc =
+    `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
   const document = await pdfjs.getDocument({
     data: new Uint8Array(await file.arrayBuffer()),
     useSystemFonts: true,

@@ -16,6 +16,12 @@ declare module "pdfjs-dist/build/pdf.mjs" {
     cleanup(): Promise<void>;
   }
 
+  export const GlobalWorkerOptions: {
+    workerSrc: string;
+  };
+
+  export const version: string;
+
   export function getDocument(options: {
     data: Uint8Array;
     useSystemFonts?: boolean;
