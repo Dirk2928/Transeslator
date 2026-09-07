@@ -36,6 +36,10 @@ export interface ConvertResponse {
   errors: ConversionError[];
 }
 
+// Vercel's serverless request limit is 4.5 MiB. Leave room for multipart
+// overhead and send larger files through the browser-side extractor instead.
+export const MAX_SERVER_UPLOAD_BYTES = 3.5 * 1024 * 1024;
+
 export const ACCEPTED_MIME: Record<string, string[]> = {
   "application/pdf": [".pdf"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
