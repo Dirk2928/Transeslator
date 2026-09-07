@@ -24,7 +24,7 @@ export function FileList() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.15 }}
-            className="rounded-lg border border-border bg-surface p-3"
+            className="overflow-hidden rounded-lg border border-border bg-surface p-2.5 sm:p-3"
           >
             <Row file={f} onRemove={() => removeFile(f.id)} canRemove={!isProcessing} />
           </motion.li>
@@ -44,11 +44,13 @@ function Row({
   canRemove: boolean;
 }) {
   const [showPreview, setShowPreview] = useState(false);
+  const [showAi, setShowAi] = useState(false);
   const r = file.result;
+  const isDone = file.status === "done" && r;
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-2.5 sm:items-center sm:gap-3">
         <StatusDot status={file.status} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-fg">{file.file.name}</p>
@@ -59,30 +61,17 @@ function Row({
           </p>
         </div>
 
-        {file.status === "done" && r && (
-          <>
-            <button
-              type="button"
-              onClick={() => setShowPreview((v) => !v)}
-              className="rounded-md border border-border px-2.5 py-1 text-xs text-fg hover:bg-border/40"
-              aria-expanded={showPreview}
-            >
-              {showPreview ? "Hide" : "Preview"}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                downloadBlob(
-                  new Blob([formatTextForDownload(r.text)], { type: "text/plain;charset=utf-8" }),
-                  r.outputName
-                )
-              }
-              className="rounded-md border border-border px-2.5 py-1 text-xs text-fg hover:bg-border/40"
-            >
-              Download
-            </button>
-            <AiPrompt file={file} result={r} />
-          </>
+        {/* On wide screens the actions sit inline; on narrow ones they wrap below. */}
+        {isDone && (
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+            <Actions
+              r={r}
+              showPreview={showPreview}
+              onTogglePreview={() => setShowPreview((v) => !v)}
+              showAi={showAi}
+              onToggleAi={() => setShowAi((v) => !v)}
+            />
+          </div>
         )}
 
         {canRemove && (
@@ -90,12 +79,28 @@ function Row({
             type="button"
             onClick={onRemove}
             aria-label={`Remove ${file.file.name}`}
-            className="rounded-md p-1 text-muted hover:text-fg"
+            className="tap-sm -mr-1 shrink-0 rounded-md p-1.5 text-muted hover:text-fg"
           >
             <XIcon />
           </button>
         )}
       </div>
+
+      {isDone && (
+        <div className="flex flex-wrap items-center gap-2 sm:hidden">
+          <Actions
+            r={r}
+            showPreview={showPreview}
+            onTogglePreview={() => setShowPreview((v) => !v)}
+            showAi={showAi}
+            onToggleAi={() => setShowAi((v) => !v)}
+          />
+        </div>
+      )}
+
+      {showAi && isDone && (
+        <AiPanel file={file} result={r} onDone={() => setShowAi(false)} />
+      )}
 
       {file.status === "error" && file.error && (
         <p className="rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-400">
@@ -110,7 +115,7 @@ function Row({
       )}
 
       {showPreview && r && (
-        <pre className="max-h-64 overflow-auto rounded-md bg-bg p-3 text-xs text-fg whitespace-pre-wrap break-words">
+        <pre className="max-h-56 overflow-auto rounded-md bg-bg p-2.5 text-[0.6875rem] leading-relaxed text-fg whitespace-pre-wrap break-words sm:max-h-64 sm:p-3 sm:text-xs">
           {r.text.slice(0, 5000) || "(empty)"}
           {r.text.length > 5000 ? "\n\n… preview truncated …" : ""}
         </pre>
@@ -119,9 +124,61 @@ function Row({
   );
 }
 
-function AiPrompt({ file, result }: { file: QueuedFile; result: ConversionResult }) {
+function Actions({
+  r,
+  showPreview,
+  onTogglePreview,
+  showAi,
+  onToggleAi,
+}: {
+  r: ConversionResult;
+  showPreview: boolean;
+  onTogglePreview: () => void;
+  showAi: boolean;
+  onToggleAi: () => void;
+}) {
+  const cls =
+    "tap-sm inline-flex items-center rounded-md border border-border px-2.5 py-1.5 text-xs text-fg hover:bg-border/40 sm:py-1";
+
+  return (
+    <>
+      <button type="button" onClick={onTogglePreview} className={cls} aria-expanded={showPreview}>
+        {showPreview ? "Hide" : "Preview"}
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          downloadBlob(
+            new Blob([formatTextForDownload(r.text)], { type: "text/plain;charset=utf-8" }),
+            r.outputName
+          )
+        }
+        className={cls}
+      >
+        Download
+      </button>
+      <button
+        type="button"
+        onClick={onToggleAi}
+        className="tap-sm inline-flex items-center rounded-md border border-accent/50 px-2.5 py-1.5 text-xs text-accent hover:bg-accent/10 sm:py-1"
+        aria-expanded={showAi}
+      >
+        AI
+      </button>
+    </>
+  );
+}
+
+function AiPanel({
+  file,
+  result,
+  onDone,
+}: {
+  file: QueuedFile;
+  result: ConversionResult;
+  onDone: () => void;
+}) {
   const updateResult = useConverter((s) => s.updateResult);
-  const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,7 +204,7 @@ function AiPrompt({ file, result }: { file: QueuedFile; result: ConversionResult
         enhanced: true,
       });
       setPrompt("");
-      setOpen(false);
+      onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI prompt failed.");
     } finally {
@@ -156,46 +213,30 @@ function AiPrompt({ file, result }: { file: QueuedFile; result: ConversionResult
   }
 
   return (
-    <>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => {
-            setOpen((value) => !value);
-            setError(null);
-          }}
-          className="rounded-md border border-accent/50 px-2.5 py-1 text-xs text-accent hover:bg-accent/10"
-          aria-expanded={open}
-        >
-          AI
-        </button>
-        {open && (
-          <div className="absolute right-0 top-full z-10 mt-2 w-80 rounded-md border border-accent/30 bg-bg p-3 shadow-lg">
-          <label htmlFor={`prompt-${file.id}`} className="mb-2 block text-xs font-medium text-fg">
-            Tell AI how to change this text
-          </label>
-          <textarea
-            id={`prompt-${file.id}`}
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            placeholder="e.g. Translate this text to Spanish"
-            rows={3}
-            className="w-full resize-y rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg"
-            disabled={busy}
-          />
-          {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
-          <button
-            type="button"
-            onClick={runPrompt}
-            disabled={busy || !prompt.trim()}
-            className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
-          >
-            {busy ? "Running…" : "Run AI"}
-          </button>
-          </div>
-        )}
-      </div>
-    </>
+    <div className="rounded-md border border-accent/30 bg-bg p-2.5 sm:p-3">
+      <label htmlFor={`prompt-${file.id}`} className="mb-2 block text-xs font-medium text-fg">
+        Tell AI how to change this text
+      </label>
+      <textarea
+        id={`prompt-${file.id}`}
+        value={prompt}
+        onChange={(event) => setPrompt(event.target.value)}
+        placeholder="e.g. Translate this text to Spanish"
+        rows={3}
+        // 16px on mobile stops iOS Safari from zooming the viewport on focus.
+        className="w-full resize-y rounded-md border border-border bg-surface px-3 py-2 text-base text-fg sm:text-sm"
+        disabled={busy}
+      />
+      {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
+      <button
+        type="button"
+        onClick={runPrompt}
+        disabled={busy || !prompt.trim()}
+        className="mt-2 w-full rounded-md bg-accent px-3 py-2 text-xs font-medium text-white disabled:opacity-50 sm:w-auto sm:py-1.5"
+      >
+        {busy ? "Running…" : "Run AI"}
+      </button>
+    </div>
   );
 }
 

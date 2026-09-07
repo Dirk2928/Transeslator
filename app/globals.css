@@ -22,6 +22,10 @@
 
 html {
   color-scheme: light dark;
+  /* Keep the layout from being shoved sideways by a long filename. */
+  overflow-x: hidden;
+  /* Stop iOS Safari from inflating text in landscape. */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -29,6 +33,37 @@ body {
   color: rgb(var(--fg));
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+/* Honour notches and home indicators when viewportFit is "cover". */
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .safe-x {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
+.safe-b {
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+
+/* Coarse pointers (touch) get comfortable 44px hit targets. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+  }
+
+  .tap-sm {
+    min-height: 36px;
+  }
 }
 
 /* Respect users who prefer reduced motion. */

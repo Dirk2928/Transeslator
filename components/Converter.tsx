@@ -97,22 +97,22 @@ export function Converter() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 sm:gap-5">
       <Dropzone onFiles={addFiles} disabled={isProcessing} />
 
       {banner && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-600 dark:text-red-400 sm:px-4 sm:py-3">
           {banner}
         </div>
       )}
 
       {files.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <button
             type="button"
             onClick={handleConvert}
             disabled={isProcessing || queuedCount === 0}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
           >
             {isProcessing ? "Converting…" : `Convert ${queuedCount || ""} file${queuedCount === 1 ? "" : "s"}`.trim()}
           </button>
@@ -122,7 +122,7 @@ export function Converter() {
               type="button"
               onClick={handleDownloadAll}
               disabled={isProcessing}
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-border/40 disabled:opacity-50"
+              className="w-full rounded-md border border-border px-4 py-2.5 text-sm font-medium text-fg transition-colors hover:bg-border/40 disabled:opacity-50 sm:w-auto sm:py-2"
             >
               Download all as ZIP ({doneFiles.length})
             </button>
@@ -132,7 +132,7 @@ export function Converter() {
             type="button"
             onClick={clearAll}
             disabled={isProcessing}
-            className="ml-auto rounded-md px-3 py-2 text-sm text-muted transition-colors hover:text-fg disabled:opacity-50"
+            className="w-full rounded-md px-3 py-2.5 text-sm text-muted transition-colors hover:text-fg disabled:opacity-50 sm:ml-auto sm:w-auto sm:py-2"
           >
             Clear all
           </button>
